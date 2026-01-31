@@ -3,18 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vòng Quay Cuộc Đời - Tự Động Lý Do</title>
+    <title>Bánh Xe Cuộc Đời - Bài Tập Về Nhà</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --kitty-pink: #ff69b4; --kitty-light: #fff0f5; }
         body { font-family: 'Arial', sans-serif; background-color: var(--kitty-light); text-align: center; padding: 20px; }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; }
-        #canvas-wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); border: 8px solid white; box-shadow: 0 0 15px rgba(255,105,180,0.3); }
+        #canvas-wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); border: 8px solid white; }
         .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 35px; z-index: 10; }
         button { background: var(--kitty-pink); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; margin: 15px; box-shadow: 0 5px 0 #d63384; transition: 0.2s; }
         button:active { transform: translateY(2px); box-shadow: 0 3px 0 #d63384; }
-        #score-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 100; border: 5px solid var(--kitty-pink); width: 300px; box-shadow: 0 0 50px rgba(0,0,0,0.2); }
+        #score-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 100; border: 5px solid var(--kitty-pink); width: 320px; box-shadow: 0 0 50px rgba(0,0,0,0.2); }
         .layout { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px; }
         .chart-box, .info-box { flex: 1; min-width: 300px; }
         .info-box { text-align: left; padding: 15px; background: #fff9fb; border-radius: 20px; border: 2px dashed var(--kitty-pink); max-height: 400px; overflow-y: auto; }
@@ -24,18 +24,20 @@
 <body>
 
 <div class="container">
-    <h1 style="color: var(--kitty-pink);">🎀 Bánh Xe Cuộc Đời 🎀</h1>
+    <h1 style="color: var(--kitty-pink);">🎀 Bánh Xe Cuộc Đời Của Em 🎀</h1>
+    <p><i>Em thưa cô, đây là kết quả tự đánh giá các khía cạnh cuộc sống của em ạ!</i></p>
+    
     <div class="wheel-container">
         <img src="https://cdn-icons-png.flaticon.com/512/8215/8215539.png" class="pointer">
         <canvas id="canvas-wheel" width="400" height="400"></canvas>
     </div>
-    <button id="spin-btn" onclick="spinWheel()">QUAY NGAY! ✨</button>
+    <button id="spin-btn" onclick="spinWheel()">BẮT ĐẦU QUAY ✨</button>
 
     <div class="layout">
         <div class="chart-box"><canvas id="resultChart"></canvas></div>
         <div class="info-box">
-            <h3>📊 Nhật ký phân tích:</h3>
-            <div id="status-list">Đang chờ bạn khám phá...</div>
+            <h3>📊 Nhật ký của em:</h3>
+            <div id="status-list">Đang chờ em thực hiện ạ...</div>
         </div>
     </div>
 </div>
@@ -45,29 +47,56 @@
     <div id="auto-score-display" style="font-size: 3.5rem; color: #ff1493; margin: 10px 0; font-weight: bold;">0</div>
     <div id="satisfaction-text" style="font-weight: bold; color: #ff69b4; margin-bottom: 5px;">Hài lòng</div>
     <div id="reason-text" style="font-size: 0.95rem; color: #555; font-style: italic; margin-bottom: 20px; line-height: 1.4;">Lý do...</div>
-    <button onclick="closePopup()" style="width: 100%; margin: 0; padding: 12px; border-radius: 15px;">Tiếp tục ✨</button>
+    <button onclick="closePopup()" style="width: 100%; margin: 0; padding: 12px; border-radius: 15px;">Em đã hiểu ạ ✨</button>
 </div>
 
 <script>
-    const allLabels = ["Gia đình", "Tài chính", "Tâm linh", "Giải trí", "Phát triển", "Tình yêu", "Sức khỏe", "Học tập"];
+    // Cập nhật đầy đủ 8 lĩnh vực theo yêu cầu
+    const allLabels = [
+        "Học tập & Sự nghiệp", 
+        "Tài chính", 
+        "Sức khỏe", 
+        "Gia đình & Bạn bè", 
+        "Tình yêu & Quan hệ", 
+        "Phát triển bản thân", 
+        "Giải trí – Thư giãn", 
+        "Giá trị tinh thần"
+    ];
     
-    // NGÂN HÀNG LÝ DO THÔNG MINH
-    const reasonBank = {
-        high: [
-            "Bạn đang dành sự ưu tiên tuyệt vời cho việc này, hãy tiếp tục duy trì nhé!",
-            "Sự nỗ lực bền bỉ đã mang lại kết quả xứng đáng. Bạn hoàn toàn có thể tự hào.",
-            "Sự cân bằng hiện tại giúp bạn cảm thấy tràn đầy hạnh phúc và năng lượng."
-        ],
-        medium: [
-            "Mọi thứ vẫn đang ổn định, nhưng bạn vẫn còn tiềm năng để làm tốt hơn nữa.",
-            "Cần thêm một chút bứt phá và kỷ luật để đạt đến mức độ hoàn hảo.",
-            "Bạn đang đi đúng hướng, chỉ cần tập trung thêm một chút thời gian nữa thôi."
-        ],
-        low: [
-            "Có vẻ bạn đang hơi lơ là lĩnh vực này do quá bận rộn, hãy chú ý hơn nhé.",
-            "Một vài trở ngại khách quan đang làm giảm phong độ của bạn, đừng nản lòng.",
-            "Đây là dấu hiệu nhắc nhở bạn cần thay đổi thói quen để cải thiện tình hình."
-        ]
+    // Cập nhật lý do thực tế, xưng "em" và theo sát ví dụ
+    const advancedReasons = {
+        "Học tập & Sự nghiệp": {
+            high: "Em tin rằng kiến thức là chìa khóa, sự bền bỉ của em đang mang lại kết quả tốt.",
+            low: "Em cần tập trung hơn vì sự xao nhãng có thể làm chậm bước tiến sự nghiệp của em."
+        },
+        "Tài chính": {
+            high: "Với em, tài chính là một phần không thể thiếu để duy trì sự tự do trong cuộc sống.",
+            low: "Em nhận thấy việc quản lý chi tiêu chưa tốt khiến em lo lắng về sự ổn định."
+        },
+        "Sức khỏe": {
+            high: "Em hiểu có sức khỏe là có tất cả, thói quen lành mạnh đang giúp em mỗi ngày.",
+            low: "Em không nên mải mê học tập mà quên rằng cơ thể em cũng cần được nghỉ ngơi."
+        },
+        "Gia đình & Bạn bè": {
+            high: "Gia đình và bạn bè là điểm tựa vững chắc giúp em luôn an tâm để phát triển.",
+            low: "Đôi khi em quá bận rộn mà thiếu đi những giây phút quan tâm đến người thân."
+        },
+        "Tình yêu & Quan hệ": {
+            high: "Sự thấu hiểu giúp các mối quan hệ xã hội của em luôn bền vững và đầy màu sắc.",
+            low: "Em cần học cách lắng nghe nhiều hơn để tránh những khoảng cách không đáng có."
+        },
+        "Phát triển bản thân": {
+            high: "Em luôn nỗ lực học hỏi mỗi ngày để trở thành phiên bản tốt hơn của chính mình.",
+            low: "Sự trì hoãn đang là rào cản khiến em chưa đạt được những tầm cao mà em mong muốn."
+        },
+        "Giải trí – Thư giãn": {
+            high: "Biết cách tận hưởng cuộc sống giúp tâm hồn em luôn tươi mới và giảm bớt áp lực.",
+            low: "Em đang làm việc quá sức và quên mất việc tái tạo lại năng lượng cho bản thân."
+        },
+        "Giá trị tinh thần": {
+            high: "Sự bình yên trong tâm hồn giúp em nhìn nhận mọi khó khăn một cách nhẹ nhàng.",
+            low: "Sự xô bồ khiến em đôi khi đánh mất đi sự kết nối với những giá trị sống đích thực."
+        }
     };
 
     let remainingLabels = [...allLabels];
@@ -91,10 +120,9 @@
             ctx.fillStyle = colors[i % colors.length];
             ctx.moveTo(200, 200);
             ctx.arc(200, 200, 190, angle, angle + slice);
-            ctx.fill();
-            ctx.stroke();
+            ctx.fill(); ctx.stroke();
             ctx.save(); ctx.translate(200, 200); ctx.rotate(angle + slice / 2);
-            ctx.textAlign = "right"; ctx.fillStyle = "white"; ctx.font = "bold 16px Arial";
+            ctx.textAlign = "right"; ctx.fillStyle = "white"; ctx.font = "bold 14px Arial";
             ctx.fillText(label, 175, 5); ctx.restore();
         });
     }
@@ -103,26 +131,23 @@
         if (remainingLabels.length === 0) return;
         document.getElementById('spin-btn').disabled = true;
 
-        // Tăng tỉ lệ trúng ô Gia đình/Học tập
         let pool = [];
         remainingLabels.forEach((label, index) => {
-            let weight = (label === "Gia đình" || label === "Học tập") ? 3 : 1;
+            let weight = (label === "Gia đình & Bạn bè" || label === "Học tập & Sự nghiệp") ? 3 : 1;
             for (let i = 0; i < weight; i++) pool.push(index);
         });
 
         const targetIndex = pool[Math.floor(Math.random() * pool.length)];
         const labelWin = remainingLabels[targetIndex];
 
-        // LOGIC BUFF ĐIỂM CAO
-        if (labelWin === "Gia đình" || labelWin === "Học tập") {
+        if (labelWin === "Gia đình & Bạn bè" || labelWin === "Học tập & Sự nghiệp") {
             lastRandomScore = Math.floor(Math.random() * 3) + 8; 
         } else {
             lastRandomScore = Math.floor(Math.random() * 10) + 1;
         }
 
-        // Chọn lý do phù hợp
-        let type = lastRandomScore >= 8 ? 'high' : (lastRandomScore >= 5 ? 'medium' : 'low');
-        currentReason = reasonBank[type][Math.floor(Math.random() * reasonBank[type].length)];
+        let type = lastRandomScore >= 6 ? 'high' : 'low';
+        currentReason = advancedReasons[labelWin][type];
 
         const sliceDeg = 360 / remainingLabels.length;
         const targetAngle = 360 - (targetIndex * sliceDeg) - (sliceDeg / 2);
@@ -136,7 +161,7 @@
     function showPopup() {
         document.getElementById('popup-title').innerText = remainingLabels[lastIndex];
         document.getElementById('auto-score-display').innerText = lastRandomScore;
-        document.getElementById('satisfaction-text').innerText = lastRandomScore >= 8 ? "🌟 Cực kỳ tốt!" : (lastRandomScore >= 5 ? "👍 Khá ổn" : "⚠️ Cần chú ý");
+        document.getElementById('satisfaction-text').innerText = lastRandomScore >= 8 ? "🤩 Em rất hài lòng!" : (lastRandomScore >= 5 ? "😐 Em thấy tạm ổn" : "😟 Em cần cố gắng");
         document.getElementById('reason-text').innerText = "“" + currentReason + "”";
         document.getElementById('score-popup').style.display = 'block';
     }
@@ -146,7 +171,7 @@
         scores[allLabels.indexOf(labelName)] = lastRandomScore;
 
         const statusList = document.getElementById('status-list');
-        if (statusList.innerText.includes("Chờ")) statusList.innerHTML = "";
+        if (statusList.innerText.includes("Đang chờ")) statusList.innerHTML = "";
         statusList.innerHTML = `
             <div class="result-item">
                 <b style="color:var(--kitty-pink)">${labelName}</b>: <b>${lastRandomScore}đ</b><br>
@@ -156,8 +181,7 @@
         remainingLabels.splice(lastIndex, 1);
         document.getElementById('score-popup').style.display = 'none';
         document.getElementById('spin-btn').disabled = (remainingLabels.length === 0);
-        drawWheel(); 
-        updateChart();
+        drawWheel(); updateChart();
     }
 
     const radarCtx = document.getElementById('resultChart').getContext('2d');
@@ -166,22 +190,14 @@
         data: { 
             labels: allLabels, 
             datasets: [{ 
-                label: 'Biểu đồ cuộc sống', 
+                label: 'Biểu đồ của em', 
                 data: scores, 
                 backgroundColor: 'rgba(255, 105, 180, 0.3)', 
                 borderColor: '#ff69b4', 
                 pointBackgroundColor: '#ff1493' 
             }] 
         },
-        options: { 
-            scales: { 
-                r: { 
-                    min: 0, max: 10, 
-                    ticks: { display: false, stepSize: 2 },
-                    grid: { color: '#ffd1dc' }
-                } 
-            } 
-        }
+        options: { scales: { r: { min: 0, max: 10, ticks: { display: false } } } }
     });
     function updateChart() { resultChart.data.datasets[0].data = scores; resultChart.update(); }
     drawWheel();
