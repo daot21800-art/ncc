@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vòng Quay Bánh Xe Cuộc Đời</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root { --kitty-pink: #ff69b4; --kitty-light: #fff0f5; }
+        body { font-family: 'Arial', sans-serif; background-color: var(--kitty-light); color: #333; text-align: center; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        
+        /* Vòng quay */
+        .wheel-container { position: relative; width: 400px; height: 400px; margin: 20px auto; }
+        #canvas-wheel { width: 100%; height: 100%; border-radius: 50%; border: 8px solid white; box-shadow: 0 0 15px rgba(255,105,180,0.5); transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
+        .pointer { position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 10; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); }
+        
+        button { background: var(--kitty-pink); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; margin: 20px; transition: 0.3s; box-shadow: 0 5px 0 #d63384; }
+        button:hover { background: #ff1493; }
+        button:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
+
+        /* Kết quả */
+        .layout { display: flex; flex-wrap: wrap; gap: 40px; align-items: flex-start; margin-top: 30px; }
+        .chart-box { flex: 1; min-width: 350px; }
+        .info-box { flex: 1; text-align: left; padding: 20px; background: #fff9fb; border-radius: 20px; border: 2px dashed var(--kitty-pink); }
+        
+        /* Popup chấm điểm */
+        #score-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 30px; border-radius: 20px; box-shadow: 0 0 50px rgba(0,0,0,0.5); z-index: 100; border: 4px solid var(--kitty-pink); }
+        input[type="number"] { width: 60px; padding: 10px; font-size: 1.2rem; border-radius: 10px; border: 2px solid var(--kitty-pink); text-align: center; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1 style="color: var(--kitty-pink);">🎀 Vòng Quay Cuộc Đời 🎀</h1>
+    <p>Nhấn quay để chọn ngẫu nhiên lĩnh vực cần chấm điểm!</p>
+
+    <div class="wheel-container">
+        <img src="https://cdn-icons-png.flaticon.com/512/8215/8215539.png" class="pointer" alt="pointer">
+        <canvas id="canvas-wheel" width="400" height="400"></canvas>
+    </div>
+
+    <button id="spin-btn" onclick="spinWheel()">QUAY NGAY! ✨</button>
+
+    <div class="layout">
+        <div class="chart-box">
+            <h3>Biểu Đồ Kết Quả</h3>
+            <canvas id="resultChart"></canvas>
+        </div>
+        <div class="info-box">
+            <h3>Tiến trình:</h3>
+            <div id="status-list">Đang chờ bạn bắt đầu...</div>
+        </div>
+    </div>
+</div>
+
+<div id="score-popup">
+    <h3 id="popup-title">Lĩnh vực: ...</h3>
+    <p>Bạn tự đánh giá bao nhiêu điểm (1-10)?</p>
+    <input type="number" id="score-input" min="1" max="10" value="5">
+    <br><br>
+    <button onclick="submitScore()">Xác nhận</button>
+</div>
+
+<script>
+    const allLabels = ["Gia đình & Bạn bè", "Tài chính", "Giá trị tinh thần", "Giải trí", "Phát triển bản thân", "Tình yêu", "Sức khỏe", "Sự nghiệp"];
+    let remainingLabels = [...allLabels];
+    let scores = new Array(allLabels.length).fill(0);
+    let currentSpinIndex = -1;
+    let currentRotation = 0;
+
+    const canvas = document.getElementById('canvas-wheel');
+    const ctx = canvas.getContext('2d');
+    const colors = ['#ffb6c1', '#ffc0cb', '#ff69b4', '#ff1493', '#db7093', '#e6a8d7', '#dda0dd', '#f8bbd0'];
+
+    function drawWheel() {
+        const slice = (2 * Math.PI) / remainingLabels.length;
+        ctx.clearRect(0, 0, 400, 400);
+        
+        if (remainingLabels.length === 0) {
+            ctx.fillStyle = "#ff69b4";
+            ctx.font = "bold 20px Arial";
+            ctx.fillText("HOÀN THÀNH!", 130, 200);
+            return;
+        }
+
+        remainingLabels.forEach((label, i) => {
+            const angle = i * slice;
+            ctx.beginPath();
+            ctx.fillStyle = colors[i % colors.length];
+            ctx.moveTo(200, 200);
+            ctx.arc(200, 200, 190, angle, angle + slice);
+            ctx.fill();
+            ctx.stroke();
+
+            // Ghi chữ
+            ctx.save();
+            ctx.translate(200, 200);
+            ctx.rotate(angle + slice / 2);
+            ctx.textAlign = "right";
+            ctx.fillStyle = "white";
+            ctx.font = "bold 14px Arial";
+            ctx.fillText(label, 170, 5);
+            ctx.restore();
+        });
+    }
+
+    function spinWheel() {
+        if (remainingLabels.length === 0) return;
+        
+        const btn = document.getElementById('spin-btn');
+        btn.disabled = true;
+
+        const randomSpin = Math.floor(Math.random() * 360) + 1440; // Quay ít nhất 4 vòng
+        currentRotation += randomSpin;
+        canvas.style.transform = `rotate(${currentRotation}deg)`;
+
+        setTimeout(() => {
+            // Tính toán mục trúng thưởng (kim chỉ ở phía trên - 90 độ)
+            const actualDeg = currentRotation % 360;
+            const sliceDeg = 360 / remainingLabels.length;
+            // Điều chỉnh góc để khớp với kim chỉ ở đỉnh (270 độ trong hệ tọa độ canvas)
+            const winningIndex = Math.floor(((360 - (actualDeg % 360) + 270) % 360) / sliceDeg);
+            
+            showPopup(winningIndex);
+        }, 4000);
+    }
+
+    function showPopup(index) {
+        currentSpinIndex = index;
+        document.getElementById('popup-title').innerText = remainingLabels[index];
+        document.getElementById('score-popup').style.display = 'block';
+    }
+
+    function submitScore() {
+        const score = parseInt(document.getElementById('score-input').value);
+        if (score < 1 || score > 10) return alert("Vui lòng nhập từ 1 đến 10");
+
+        const labelName = remainingLabels[currentSpinIndex];
+        const originalIndex = allLabels.indexOf(labelName);
+        scores[originalIndex] = score;
+
+        // Xóa mục đã chọn khỏi danh sách quay
+        remainingLabels.splice(currentSpinIndex, 1);
+        
+        // Cập nhật giao diện
+        document.getElementById('score-popup').style.display = 'none';
+        document.getElementById('spin-btn').disabled = (remainingLabels.length === 0);
+        document.getElementById('status-list').innerHTML += `<div>✅ ${labelName}: ${score}đ</div>`;
+        
+        drawWheel();
+        updateResultChart();
+        
+        if (remainingLabels.length === 0) {
+            alert("Chúc mừng! Bạn đã hoàn thành Bánh Xe Cuộc Đời của mình.");
+        }
+    }
+
+    // Biểu đồ Radar
+    const radarCtx = document.getElementById('resultChart').getContext('2d');
+    const resultChart = new Chart(radarCtx, {
+        type: 'radar',
+        data: {
+            labels: allLabels,
+            datasets: [{
+                label: 'Mức độ hài lòng',
+                data: scores,
+                backgroundColor: 'rgba(255, 105, 180, 0.4)',
+                borderColor: '#ff69b4',
+                pointBackgroundColor: '#d63384'
+            }]
+        },
+        options: { scales: { r: { min: 0, max: 10 } } }
+    });
+
+    function updateResultChart() {
+        resultChart.data.datasets[0].data = scores;
+        resultChart.update();
+    }
+
+    drawWheel();
+</script>
+
+</body>
+</html> cho t thêm con hello kity
