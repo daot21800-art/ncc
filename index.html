@@ -3,69 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vòng Quay Cuộc Đời - Ưu Tiên Điểm Cao</title>
+    <title>Vòng Quay Cuộc Đời - Tự Động Đánh Giá</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         :root { --kitty-pink: #ff69b4; --kitty-light: #fff0f5; }
         body { font-family: 'Arial', sans-serif; background-color: var(--kitty-light); text-align: center; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .wheel-container { position: relative; width: 350px; height: 350px; margin: 20px auto; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        .wheel-container { position: relative; width: 320px; height: 320px; margin: 20px auto; }
         #canvas-wheel { width: 100%; height: 100%; border-radius: 50%; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1); }
-        .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 40px; z-index: 10; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2)); }
-        button { background: var(--kitty-pink); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; margin: 20px; box-shadow: 0 5px 0 #d63384; transition: 0.2s; }
-        button:active { transform: translateY(3px); box-shadow: 0 2px 0 #d63384; }
-        button:disabled { background: #ccc; box-shadow: none; cursor: not-allowed; }
-        #score-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 100; border: 5px solid var(--kitty-pink); width: 320px; box-shadow: 0 0 100px rgba(0,0,0,0.3); }
-        .layout { display: flex; flex-wrap: wrap; gap: 30px; margin-top: 30px; }
+        .pointer { position: absolute; top: -10px; left: 50%; transform: translateX(-50%); width: 35px; z-index: 10; }
+        button { background: var(--kitty-pink); color: white; border: none; padding: 15px 40px; font-size: 1.2rem; border-radius: 50px; cursor: pointer; margin: 15px; box-shadow: 0 5px 0 #d63384; }
+        button:active { transform: translateY(2px); box-shadow: 0 3px 0 #d63384; }
+        #score-popup { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 25px; border-radius: 25px; z-index: 100; border: 5px solid var(--kitty-pink); width: 280px; box-shadow: 0 0 50px rgba(0,0,0,0.2); }
+        .layout { display: flex; flex-wrap: wrap; gap: 20px; margin-top: 30px; }
         .chart-box, .info-box { flex: 1; min-width: 300px; }
-        .info-box { text-align: left; padding: 20px; background: #fff9fb; border-radius: 20px; border: 2px dashed var(--kitty-pink); max-height: 500px; overflow-y: auto; }
-        input, select, textarea { width: 100%; padding: 10px; border-radius: 10px; border: 2px solid #ffc0cb; margin-top: 5px; box-sizing: border-box; }
+        .info-box { text-align: left; padding: 15px; background: #fff9fb; border-radius: 20px; border: 2px dashed var(--kitty-pink); }
+        .result-item { background: white; padding: 10px; border-radius: 12px; margin-bottom: 8px; border-left: 5px solid var(--kitty-pink); font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1 style="color: var(--kitty-pink);">🎀 Bánh Xe May Mắn 🎀</h1>
+    <h1 style="color: var(--kitty-pink);">🎀 Vòng Quay Tự Động 🎀</h1>
     <div class="wheel-container">
-        <img src="https://cdn-icons-png.flaticon.com/512/8215/8215539.png" class="pointer" alt="pointer">
+        <img src="https://cdn-icons-png.flaticon.com/512/8215/8215539.png" class="pointer">
         <canvas id="canvas-wheel" width="400" height="400"></canvas>
     </div>
-    <button id="spin-btn" onclick="spinWheel()">QUAY ĐIỂM NGAY! ✨</button>
+    <button id="spin-btn" onclick="spinWheel()">QUAY NGAY! ✨</button>
 
     <div class="layout">
         <div class="chart-box"><canvas id="resultChart"></canvas></div>
         <div class="info-box">
-            <h3>📝 Nhật ký kết quả:</h3>
+            <h3>📊 Kết quả phân tích:</h3>
             <div id="status-list">Đang chờ bạn quay...</div>
         </div>
     </div>
 </div>
 
 <div id="score-popup">
-    <h2 id="popup-title" style="color: var(--kitty-pink); margin: 0;">Lĩnh vực</h2>
-    <div id="auto-score-display" style="font-size: 2.8rem; color: #ff1493; margin: 15px 0; font-weight: bold;">0đ</div>
-    <div style="text-align: left; margin-bottom: 10px;">
-        <label><b>Mức độ hài lòng:</b></label>
-        <select id="satisfaction-input">
-            <option value="😊 Rất hài lòng">😊 Rất hài lòng</option>
-            <option value="😐 Chấp nhận được">😐 Chấp nhận được</option>
-            <option value="😟 Cần cố gắng hơn">😟 Cần cố gắng hơn</option>
-        </select>
-    </div>
-    <div style="text-align: left; margin-bottom: 15px;">
-        <label><b>Lý do vì sao:</b></label>
-        <textarea id="reason-input" placeholder="Vì sao lĩnh vực này lại đạt mức điểm đó?"></textarea>
-    </div>
-    <button onclick="submitScore()" style="width: 100%; margin: 0;">Xác Nhận & Lưu ✨</button>
+    <h3 id="popup-title" style="color: var(--kitty-pink); margin: 0;">Lĩnh vực</h3>
+    <div id="auto-score-display" style="font-size: 3rem; color: #ff1493; margin: 10px 0; font-weight: bold;">0</div>
+    <div id="satisfaction-text" style="font-weight: bold; margin-bottom: 15px; color: #555;">Mức độ hài lòng</div>
+    <button onclick="closePopup()" style="width: 100%; margin: 0; padding: 10px;">Tiếp tục ✨</button>
 </div>
 
 <script>
     const allLabels = ["Gia đình", "Tài chính", "Tâm linh", "Giải trí", "Phát triển", "Tình yêu", "Sức khỏe", "Học tập"];
     let remainingLabels = [...allLabels];
     let scores = new Array(allLabels.length).fill(0);
-    let currentSpinIndex = -1;
     let currentRotation = 0;
     let lastRandomScore = 0;
+    let lastIndex = -1;
 
     const canvas = document.getElementById('canvas-wheel');
     const ctx = canvas.getContext('2d');
@@ -84,8 +72,8 @@
             ctx.fill();
             ctx.stroke();
             ctx.save(); ctx.translate(200, 200); ctx.rotate(angle + slice / 2);
-            ctx.textAlign = "right"; ctx.fillStyle = "white"; ctx.font = "bold 15px Arial";
-            ctx.fillText(label, 170, 5); ctx.restore();
+            ctx.textAlign = "right"; ctx.fillStyle = "white"; ctx.font = "bold 16px Arial";
+            ctx.fillText(label, 175, 5); ctx.restore();
         });
     }
 
@@ -102,54 +90,61 @@
         const targetIndex = pool[Math.floor(Math.random() * pool.length)];
         const labelWin = remainingLabels[targetIndex];
 
-        // BUFF ĐIỂM CAO CHO GIA ĐÌNH & HỌC TẬP
+        // LOGIC BUFF ĐIỂM
         if (labelWin === "Gia đình" || labelWin === "Học tập") {
-            lastRandomScore = Math.floor(Math.random() * 3) + 8; // Ra điểm 8, 9, 10
+            lastRandomScore = Math.floor(Math.random() * 3) + 8; // 8-10
         } else {
-            lastRandomScore = Math.floor(Math.random() * 10) + 1; // Ngẫu nhiên 1-10
+            lastRandomScore = Math.floor(Math.random() * 10) + 1; // 1-10
         }
 
         const sliceDeg = 360 / remainingLabels.length;
         const targetAngle = 360 - (targetIndex * sliceDeg) - (sliceDeg / 2);
-        currentRotation += (Math.floor(Math.random() * 5) + 5) * 360 + targetAngle;
+        currentRotation += 1800 + targetAngle;
         canvas.style.transform = `rotate(${currentRotation}deg)`;
 
-        setTimeout(() => showPopup(targetIndex, lastRandomScore), 4000);
+        lastIndex = targetIndex;
+        setTimeout(showPopup, 4000);
     }
 
-    function showPopup(index, score) {
-        currentSpinIndex = index;
-        document.getElementById('popup-title').innerText = remainingLabels[index];
+    function getSatisfaction(score) {
+        if (score >= 8) return "😊 Rất hài lòng";
+        if (score >= 5) return "😐 Tạm hài lòng";
+        return "😟 Chưa hài lòng";
+    }
+
+    function showPopup() {
+        const score = lastRandomScore;
+        const label = remainingLabels[lastIndex];
+        document.getElementById('popup-title').innerText = label;
         document.getElementById('auto-score-display').innerText = score + "đ";
+        document.getElementById('satisfaction-text').innerText = getSatisfaction(score);
         document.getElementById('score-popup').style.display = 'block';
     }
 
-    function submitScore() {
-        const satisfaction = document.getElementById('satisfaction-input').value;
-        const reason = document.getElementById('reason-input').value || "Không có lý do";
-        const labelName = remainingLabels[currentSpinIndex];
-        
+    function closePopup() {
+        const labelName = remainingLabels[lastIndex];
+        const satisfac = getSatisfaction(lastRandomScore);
         scores[allLabels.indexOf(labelName)] = lastRandomScore;
 
         const statusList = document.getElementById('status-list');
-        if (statusList.innerText === "Đang chờ bạn quay...") statusList.innerHTML = "";
+        if (statusList.innerText.includes("Chờ")) statusList.innerHTML = "";
         statusList.innerHTML = `
-            <div style="background: white; padding: 12px; border-radius: 15px; margin-bottom: 10px; border-left: 5px solid var(--kitty-pink); box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                <b>${labelName}: ${lastRandomScore}đ</b> - <span>${satisfaction}</span><br>
-                <small style="color: #666;"><i>"${reason}"</i></small>
+            <div class="result-item">
+                <b>${labelName}</b>: ${lastRandomScore}đ <br>
+                <span style="color: var(--kitty-pink)">${satisfac}</span>
             </div>` + statusList.innerHTML;
 
-        remainingLabels.splice(currentSpinIndex, 1);
+        remainingLabels.splice(lastIndex, 1);
         document.getElementById('score-popup').style.display = 'none';
-        document.getElementById('reason-input').value = "";
         document.getElementById('spin-btn').disabled = (remainingLabels.length === 0);
-        drawWheel(); updateChart();
+        drawWheel(); 
+        updateChart();
     }
 
     const radarCtx = document.getElementById('resultChart').getContext('2d');
     const resultChart = new Chart(radarCtx, {
         type: 'radar',
-        data: { labels: allLabels, datasets: [{ label: 'Mức độ hài lòng', data: scores, backgroundColor: 'rgba(255, 105, 180, 0.2)', borderColor: '#ff69b4', pointBackgroundColor: '#ff1493' }] },
+        data: { labels: allLabels, datasets: [{ label: 'Đánh giá', data: scores, backgroundColor: 'rgba(255, 105, 180, 0.2)', borderColor: '#ff69b4', pointBackgroundColor: '#ff1493' }] },
         options: { scales: { r: { min: 0, max: 10 } } }
     });
     function updateChart() { resultChart.data.datasets[0].data = scores; resultChart.update(); }
